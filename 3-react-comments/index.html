@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello React</title>
+    <meta charset="utf-8">
+    <script src="assets/react/react.js"></script>
+    <script src="assets/react/JSXTransformer.js"></script>
+    <script src="assets/jquery/dist/jquery.js"></script>
+    <script src="assets/showdown/compressed/showdown.js"></script>
+  </head>
+  <body>
+    <div id="content"></div>
+    <script type="text/jsx">
+      /**
+       * @jsx React.DOM
+       */
+       
+      
+      // Markdown Converter
+      var converter = new Showdown.converter();
+      
+      // ## React components
+       
+      // ### comment
+      // 
+      // a single **comment**, with 'author' and 'content'.
+      var Comment = React.createClass({
+        render: function() {
+          var rawMarkup = converter.makeHtml(this.props.children.toString());
+          return (
+            <div className="comment">
+              <h2 className="commentAuthor">
+                {this.props.author}
+              </h2>
+              <span dangerouslySetInnerHTML={{__html: rawMarkup}} />
+            </div>
+          );
+        }
+      });
+
+      // component: list of comment
+      var CommentList = React.createClass({
+        render: function() {
+          var commentNodes = this.props.data.map(function (comment) {
+            return <Comment author={comment.author}>{comment.text}</Comment>
+          });
+          return (
+            <div className="commentList">
+              {commentNodes}
+            </div>
+          );
+        }
+      });
+      
+      // component: form for new comment
+      var CommentForm = React.createClass({
+        // custom submit handler
+        handleSubmit: function () {
+          // get values from form
+          var author = this.refs.author.getDOMNode().value.trim();
+          var text = this.refs.text.getDOMNode().value.trim();
+          // "validation"
+          if (!text || !author) {
+            return false
+          }
+          
+          // call our configured handler fn with the data
+          this.props.onCommentSubmit({author:author,text:text});
+          
+          // reset the form state
+          this.refs.author.getDOMNode().value = '';
+          this.refs.text.getDOMNode().value = '';
+          // prevent browser default action:
+          return false
+        },
+        render: function() {
+          return (
+            <form className="commentForm" onSubmit={this.handleSubmit}>
+              {/*                                  ref: data binding! */}
+              <input type="text" placeholder="Your name" ref="author"/>
+              <input type="text" placeholder="Your Comment here…" ref="text"/>
+              <input type="submit" value="Post" />
+            </form>
+          );
+        }
+      });
+      
+      // meta-component: complete comment box
+      var CommentBox = React.createClass({
+        // custom fetch function
+        loadCommentsFromServer: function() {
+          $.ajax({
+            url: this.props.url, // the url=foo form JSX!
+            // dataType: 'json',
+            success: function(data) {
+              data = JSON.parse(data);
+              console.log(data);
+              // set the component state!
+              this.setState({data: data});
+            }.bind(this),
+            error: function(xhr, status, err) {
+              console.error(this.props.url, status, err.toString());
+            }.bind(this)
+          });
+        },
+        // custom fn to add new comment
+        handleCommentSubmit: function (comment) {
+          
+          // **do with the data locally what u expect the server to do:**  
+          // the new comment is added to the list of existing comments
+          var comments = this.state.data;
+          var newComments = comments.concat([comment]);
+
+          // **update the state for instant UI change:**
+          // call setState with the data we just constructed
+          this.setState({data: newComments});
+          
+          $.ajax({
+            url: this.props.url,
+            dataType: 'json',
+            type: 'POST',
+            data: comment,
+            success: function(data) {
+              // here the state is also set - with the server's answer.
+              this.setState({data: data});
+            }.bind(this)
+          });
+        },
+        // react method
+        getInitialState: function() {
+          return {data: []};
+        },
+        // react method
+        componentWillMount: function () {
+          this.loadCommentsFromServer();
+          setInterval(this.loadCommentsFromServer, this.props.pollInterval)
+        },
+        // react method
+        render: function() {
+          return (
+            <div className="commentBox">
+              <h1>Comments</h1>
+              <CommentList data={this.state.data}/>
+              <CommentForm 
+                // set as prop: a callback to handle submits!
+                onCommentSubmit={this.handleCommentSubmit}
+              />
+            </div>
+          );
+        }
+      });
+      
+      
+      // Instance of Component in view
+      React.renderComponent(
+        // we use this as `this.props.url` etc.
+        <CommentBox url="comments.json" pollInterval={2000}/>,
+        document.getElementById('content')
+      );
+      
+    </script>
+  </body>
+</html>

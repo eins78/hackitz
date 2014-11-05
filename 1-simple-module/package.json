@@ -1,0 +1,16 @@
+{
+  "name": "simple-module",
+  "version": "1.0.0",
+  "description": "playing around with js modules",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "browserify app.js > bundle.js"
+  },
+  "author": "Max F. Albrecht <max.albrecht@zhdk.ch>",
+  "license": "MIT",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "browserify": "^6.2.0"
+  }
+}

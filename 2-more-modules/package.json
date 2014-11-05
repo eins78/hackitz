@@ -1,0 +1,20 @@
+{
+  "name": "project-using-more-modules",
+  "version": "1.0.0",
+  "description": "playing around with js modules",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "browserify app.js -o dist/bundle.js",
+    "watch": "watchify app.js -o dist/bundle.js"
+  },
+  "author": "Max F. Albrecht <max.albrecht@zhdk.ch>",
+  "license": "MIT",
+  "dependencies": {
+    "jquery": "^2.1.1"
+  },
+  "devDependencies": {
+    "browserify": "^6.2.0",
+    "watchify": "^2.1.1"
+  }
+}
